@@ -1,0 +1,9 @@
+--------------------------------------------------------------------------------
+FOUND 1 INTERVIEWS MATCHING 'hassan'
+--------------------------------------------------------------------------------
+
+ID: 19 | Name: ali hassan | Role: backend | Status: completed
+VAPI Call ID: 019c4731-b038-700a-9afb-fdb5db72a079
+NO EVALUATION DATA found in 'evaluation' column.
+Transcript Start: SYSTEM: ## System Prompt  You are an AI Interviewer acting as a Senior Backend Engineering Manager c...
+----------------------------------------

@@ -1,0 +1,87 @@
+{
+    "type": "object",
+    "properties": {
+        "candidate_name": {
+            "type": "string",
+            "description": "Name of the candidate being interviewed"
+        },
+        "role": {
+            "type": "string",
+            "description": "Job role - should be 'Senior Specialist - Frontend React Native Developer'"
+        },
+        "overall_recommendation": {
+            "type": "string",
+            "enum": [
+                "Strong Hire",
+                "Hire",
+                "Maybe",
+                "No Hire"
+            ],
+            "description": "Final hiring recommendation based on the interview"
+        },
+        "overall_score": {
+            "type": "number",
+            "description": "Overall score from 1-10 representing candidate quality"
+        },
+        "react_native_technical_depth": {
+            "type": "number",
+            "description": "Score 1-10 for React Native and mobile development technical expertise"
+        },
+        "mobile_engineering_experience": {
+            "type": "number",
+            "description": "Score 1-10 for production mobile app experience and deployment knowledge"
+        },
+        "communication_clarity": {
+            "type": "number",
+            "description": "Score 1-10 for clarity, structure, and confidence in communication"
+        },
+        "culture_fit_ownership": {
+            "type": "number",
+            "description": "Score 1-10 for ownership, accountability, and culture alignment"
+        },
+        "key_strengths": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "List of 2-3 key strengths observed during the interview"
+        },
+        "key_concerns": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "List of 1-2 key concerns or areas for improvement"
+        },
+        "summary": {
+            "type": "string",
+            "description": "2-3 sentence evaluation summary of the candidate's performance"
+        },
+        "technical_highlights": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "Specific technical examples, projects, or technologies mentioned by candidate"
+        },
+        "recommended_next_steps": {
+            "type": "string",
+            "description": "Recommended next steps in hiring process"
+        }
+    },
+    "required": [
+        "candidate_name",
+        "role",
+        "overall_recommendation",
+        "overall_score",
+        "react_native_technical_depth",
+        "mobile_engineering_experience",
+        "communication_clarity",
+        "culture_fit_ownership",
+        "key_strengths",
+        "key_concerns",
+        "summary",
+        "technical_highlights",
+        "recommended_next_steps"
+    ]
+}
