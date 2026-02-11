@@ -16,7 +16,12 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://candimind-v3.vercel.app"],
+    allow_origins=[
+        "https://candimind-v3.vercel.app",  # Production frontend
+        "http://localhost:5173",             # Local development
+        "http://localhost:3000",             # Alternative local port
+        settings.frontend_url                # From environment variable
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
