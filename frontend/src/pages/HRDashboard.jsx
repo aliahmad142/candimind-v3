@@ -3,6 +3,14 @@ import { interviewAPI } from '../services/api';
 import { Copy, Check, Plus, Filter, Trash2, RefreshCw } from 'lucide-react';
 
 export default function HRDashboard() {
+    // Password authentication state
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [passwordInput, setPasswordInput] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+    const [checkingAuth, setCheckingAuth] = useState(true);
+
+    const HR_PASSWORD = '#Candimind@2026';
+
     const [interviews, setInterviews] = useState([]);
     const [loading, setLoading] = useState(false);
     const [showForm, setShowForm] = useState(false);
@@ -24,9 +32,40 @@ export default function HRDashboard() {
         status: ''
     });
 
+    // Check if already authenticated on mount
     useEffect(() => {
-        fetchInterviews();
-    }, [filters]);
+        const authToken = localStorage.getItem('hr_auth');
+        if (authToken === HR_PASSWORD) {
+            setIsAuthenticated(true);
+        }
+        setCheckingAuth(false);
+    }, []);
+
+    // Handle password verification
+    const handlePasswordSubmit = (e) => {
+        e.preventDefault();
+        if (passwordInput === HR_PASSWORD) {
+            localStorage.setItem('hr_auth', HR_PASSWORD);
+            setIsAuthenticated(true);
+            setPasswordError('');
+        } else {
+            setPasswordError('Incorrect password. Please try again.');
+            setPasswordInput('');
+        }
+    };
+
+    // Handle logout
+    const handleLogout = () => {
+        localStorage.removeItem('hr_auth');
+        setIsAuthenticated(false);
+        setPasswordInput('');
+    };
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchInterviews();
+        }
+    }, [filters, isAuthenticated]);
 
     const fetchInterviews = async () => {
         setLoading(true);
@@ -97,6 +136,68 @@ export default function HRDashboard() {
         }
     };
 
+    // Show loading while checking authentication
+    if (checkingAuth) {
+        return (
+            <div className="page">
+                <div className="container">
+                    <div className="loading">
+                        <div className="spinner"></div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Show password screen if not authenticated
+    if (!isAuthenticated) {
+        return (
+            <div className="page">
+                <div className="container">
+                    <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+                        <div className="card card-glass text-center">
+                            <h1 className="page-title" style={{ marginBottom: 'var(--spacing-md)' }}>
+                                🔐 HR Dashboard Access
+                            </h1>
+                            <p style={{ color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-xl)' }}>
+                                Please enter the admin password to access the HR Dashboard.
+                            </p>
+                            <form onSubmit={handlePasswordSubmit}>
+                                <input
+                                    type="password"
+                                    className="input"
+                                    placeholder="Enter admin password"
+                                    value={passwordInput}
+                                    onChange={(e) => setPasswordInput(e.target.value)}
+                                    style={{
+                                        width: '100%',
+                                        marginBottom: 'var(--spacing-md)',
+                                        textAlign: 'center',
+                                        fontSize: '1.25rem'
+                                    }}
+                                    autoFocus
+                                    required
+                                />
+                                {passwordError && (
+                                    <div className="alert alert-error" style={{ marginBottom: 'var(--spacing-md)', textAlign: 'left' }}>
+                                        {passwordError}
+                                    </div>
+                                )}
+                                <button
+                                    type="submit"
+                                    className="btn btn-primary"
+                                    style={{ width: '100%' }}
+                                >
+                                    Login
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="page">
             <div className="container">
@@ -106,13 +207,22 @@ export default function HRDashboard() {
                             <h1 className="page-title">AI Interview Platform</h1>
                             <p className="page-subtitle">Create and manage AI-powered technical interviews</p>
                         </div>
-                        <button
-                            className="btn btn-primary"
-                            onClick={() => setShowForm(!showForm)}
-                        >
-                            <Plus size={20} />
-                            New Interview
-                        </button>
+                        <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
+                            <button
+                                className="btn btn-secondary"
+                                onClick={handleLogout}
+                                style={{ padding: '0.75rem 1.5rem' }}
+                            >
+                                Logout
+                            </button>
+                            <button
+                                className="btn btn-primary"
+                                onClick={() => setShowForm(!showForm)}
+                            >
+                                <Plus size={20} />
+                                New Interview
+                            </button>
+                        </div>
                     </div>
                 </div>
 
