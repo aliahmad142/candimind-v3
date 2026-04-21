@@ -51,8 +51,13 @@ async def vapi_webhook(
         if not event_type:
             event_type = payload.get("type") or payload.get("event")
         
+        # Handle assistant-request (sent at the very start of the call)
+        if event_type == "assistant-request":
+            print(f"👋 Processing assistant-request webhook")
+            await handle_status_update(payload, db)
+            
         # Handle end-of-call event
-        if event_type == "end-of-call-report" or event_type == "call.ended":
+        elif event_type == "end-of-call-report" or event_type == "call.ended":
             print(f"✅ Processing end-of-call-report webhook")
             await handle_end_of_call(payload, db)
         
@@ -279,9 +284,22 @@ async def handle_end_of_call(payload: dict, db: Session):
 async def handle_status_update(payload: dict, db: Session):
     """Handle call status updates from VAPI"""
     
-    # Extract interview ID from metadata
-    metadata = payload.get("call", {}).get("metadata") or payload.get("metadata", {})
-    interview_unique_id = metadata.get("interviewId")
+    # 1. Extract message data if nested
+    message_data = payload.get("message", {}) if "message" in payload else payload
+    
+    # 2. Extract interview ID from metadata or overrides
+    # Check all possible locations for interviewId
+    metadata = message_data.get("call", {}).get("metadata") or message_data.get("metadata", {})
+    overrides = message_data.get("assistantOverrides", {}) or payload.get("assistantOverrides", {})
+    overrides_metadata = overrides.get("metadata", {})
+    
+    interview_unique_id = (
+        metadata.get("interviewId") or 
+        overrides_metadata.get("interviewId") or 
+        payload.get("metadata", {}).get("interviewId")
+    )
+    
+    print(f"🔍 Webhook Search: interviewId={interview_unique_id}")
     
     if not interview_unique_id:
         return
@@ -290,9 +308,11 @@ async def handle_status_update(payload: dict, db: Session):
         Interview.unique_id == interview_unique_id
     ).first()
     
-    if interview and interview.status == "pending":
-        interview.status = "in_progress"
-        interview.updated_at = datetime.utcnow()
+    if interview:
+        # Update status to in_progress if not already completed
+        if interview.status != "completed":
+            interview.status = "in_progress"
+            interview.updated_at = datetime.utcnow()
         
         # Extract call ID from webhook payload
         # Try multiple locations to be safe

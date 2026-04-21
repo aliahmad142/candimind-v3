@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pathlib import Path
 from functools import lru_cache
 
 
@@ -21,10 +22,12 @@ class Settings(BaseSettings):
     # Security
     secret_key: str
     
-    model_config = SettingsConfigDict(env_file=".env", case_sensitive=False)
+    model_config = SettingsConfigDict(
+        env_file=str(Path(__file__).parent / ".env"),
+        case_sensitive=False
+    )
 
 
-@lru_cache()
 def get_settings() -> Settings:
-    """Get cached settings instance"""
+    """Get settings instance"""
     return Settings()

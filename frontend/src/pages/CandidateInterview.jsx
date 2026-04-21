@@ -95,7 +95,7 @@ export default function CandidateInterview() {
 
             vapi.on('error', (error) => {
                 console.error('VAPI Error:', error);
-                setError('An error occurred during the interview. Please refresh and try again.');
+                setError(`An error occurred: ${error?.message || JSON.stringify(error) || 'Unknown VAPI error'}. Please refresh and try again.`);
             });
 
         } catch (err) {
@@ -113,10 +113,9 @@ export default function CandidateInterview() {
         console.log('Starting interview with config:', interview.vapi_config);
 
         try {
-            console.log('Calling vapi.start() with assistant ID:', interview.vapi_config.assistantId);
-            // Start the VAPI call with just the assistant ID
-            // Note: Assistant customization (like first message) should be configured in VAPI dashboard
-            await vapiInstance.start(interview.vapi_config.assistantId);
+            console.log('Calling vapi.start() with assistant ID and overrides', interview.vapi_config);
+            // VAPI Web SDK expects (id, overrides_object)
+            await vapiInstance.start(interview.vapi_config.assistantId?.trim(), interview.vapi_config.assistantOverrides);
             console.log('VAPI start() call completed successfully');
         } catch (err) {
             console.error('Error starting call:', err);

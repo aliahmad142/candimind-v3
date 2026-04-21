@@ -1,6 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from database import init_db
+from sqlalchemy.orm import Session
+from database import init_db, get_db
 from routes import interviews, webhooks
 from config import get_settings
 
@@ -50,6 +51,16 @@ async def root():
         "status": "running",
         "version": "1.0.0"
     }
+
+
+@app.post("/")
+async def diagnostic_root(request: Request, db: Session = Depends(get_db)):
+    """Diagnostic route to catch and redirect misdirected VAPI webhooks"""
+    data = await request.json()
+    print(f"📡 DIAGNOSTIC WEBHOOK: {data.get('type')}")
+    from routes.webhooks import handle_status_update
+    await handle_status_update(data, db)
+    return {"status": "success", "message": "LIVE_BACKEND_READY"}
 
 
 @app.get("/health")

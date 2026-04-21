@@ -210,6 +210,14 @@ async def get_interview_by_uid(
         candidate_name=interview.candidate_name
     )
     
+    # Inject metadata for the webhook to match the interview
+    if "assistantOverrides" not in assistant_config:
+        assistant_config["assistantOverrides"] = {}
+    
+    assistant_config["assistantOverrides"]["metadata"] = {
+        "interviewId": interview.unique_id
+    }
+    
     return {
         "interview": {
             "id": interview.id,

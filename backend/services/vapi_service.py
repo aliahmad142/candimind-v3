@@ -91,6 +91,7 @@ class VAPIService:
             "assistantId": base_assistant_id,
             "assistantOverrides": {
                 "firstMessage": first_message,
+                "serverUrl": f"{settings.backend_url}/api/webhooks/vapi",
                 "variableValues": {
                     "candidateName": candidate_name
                 }
