@@ -93,9 +93,38 @@ export default function CandidateInterview() {
                 }
             });
 
-            vapi.on('error', (error) => {
-                console.error('VAPI Error:', error);
-                setError(`An error occurred: ${error?.message || JSON.stringify(error) || 'Unknown VAPI error'}. Please refresh and try again.`);
+            vapi.on('error', (vapiError) => {
+                console.error('VAPI Error Event:', vapiError);
+                
+                // Extract the actual error message
+                let errorDisplay = '';
+                try {
+                    if (vapiError?.message) {
+                        errorDisplay = String(vapiError.message);
+                    } else if (vapiError?.error?.message) {
+                        errorDisplay = String(vapiError.error.message);
+                    } else if (typeof vapiError === 'string') {
+                        errorDisplay = vapiError;
+                    } else if (vapiError) {
+                        errorDisplay = JSON.stringify(vapiError);
+                    }
+                } catch (e) {
+                    errorDisplay = 'Error details hidden in complex object';
+                }
+
+                if (!errorDisplay || errorDisplay === '{}' || errorDisplay === '[object Object]') {
+                    errorDisplay = 'Unknown Vapi Error - check console';
+                }
+
+                // Ignore technical artifacts
+                if (errorDisplay.includes('ejected') || errorDisplay.includes('Meeting has ended') || errorDisplay.includes('ended')) {
+                    console.log('Ignoring transport ejection error as call is finishing');
+                    setCallStatus('ended');
+                    setIsCallActive(false);
+                    return;
+                }
+
+                setError(`Interview Error: ${errorDisplay}. Please check your microphone and refresh.`);
             });
 
         } catch (err) {

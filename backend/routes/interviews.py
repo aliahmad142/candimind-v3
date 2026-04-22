@@ -364,10 +364,37 @@ async def fetch_results_from_vapi(
         call_id = existing_result.vapi_call_id
     
     if not call_id:
-        raise HTTPException(
-            status_code=400, 
-            detail="No VAPI call ID found. Interview may not have started yet."
+        # Fallback: Try to find a call on VAPI by unique ID or candidate name
+        print(f"🔍 No call_id found in DB. Searching VAPI for UID {interview.unique_id}...")
+        matching_calls = await vapi_service.find_calls_by_interview(
+            interview_unique_id=interview.unique_id,
+            candidate_name=interview.candidate_name
         )
+        
+        if matching_calls:
+            # Use the most recent matching call
+            call_id = matching_calls[0].get("id")
+            print(f"✨ Found matching call on VAPI: {call_id}")
+            
+            # Save it so we don't have to search again
+            if existing_result:
+                existing_result.vapi_call_id = call_id
+            else:
+                existing_result = InterviewResult(
+                    interview_id=interview.id,
+                    vapi_call_id=call_id,
+                    transcript="",
+                    summary="",
+                    evaluation=None,
+                    call_duration=0
+                )
+                db.add(existing_result)
+            db.commit()
+        else:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"No VAPI call found for {interview.candidate_name}. Please ensure the interview has started."
+            )
     
     # Fetch from VAPI API
     print(f"🔄 Fetching results from VAPI for call {call_id}")
@@ -379,8 +406,12 @@ async def fetch_results_from_vapi(
             detail="Failed to fetch results from VAPI"
         )
     
-    # Extract structured outputs
+    # Extract transcript and summary
     artifact = call_details.get("artifact", {})
+    analysis = call_details.get("analysis", {})
+    summary = analysis.get("summary", "")
+    
+    # Extract structured outputs
     structured_outputs = artifact.get("structuredOutputs", {})
     
     evaluation_data = None
@@ -388,7 +419,14 @@ async def fetch_results_from_vapi(
         name = output_data.get("name")
         if name in ["Interview_Evaluation", "Backend_Interview_Evaluation", "Scholarship_Evaluation"]:
             evaluation_data = output_data.get("result")
+            # If evaluation has its own summary, use it
+            if evaluation_data and evaluation_data.get("summary"):
+                summary = evaluation_data.get("summary")
             break
+    
+    if not evaluation_data:
+        # Fallback to analysis structured data
+        evaluation_data = analysis.get("structuredData") or analysis.get("evaluation")
     
     if not evaluation_data:
         raise HTTPException(
@@ -396,20 +434,25 @@ async def fetch_results_from_vapi(
             detail="VAPI has not generated evaluation yet. Please wait 1-2 minutes and try again."
         )
     
-    # Extract transcript
+    # Extract transcript from messages
     messages = artifact.get("messages", [])
+    if not messages:
+        # Try from analysis or call root if missing in artifact
+        messages = call_details.get("messages", [])
+        
     transcript_parts = []
     for msg in messages:
         role = msg.get("role", "unknown")
         content = msg.get("message") or msg.get("content", "")
-        transcript_parts.append(f"{role.upper()}: {content}")
+        if content:
+            transcript_parts.append(f"{role.upper()}: {content}")
     
     transcript = "\n\n".join(transcript_parts)
     
     # Update database
     if existing_result:
         existing_result.evaluation = evaluation_data
-        existing_result.summary = evaluation_data.get("summary", "")
+        existing_result.summary = summary
         existing_result.transcript = transcript
         existing_result.completed_at = datetime.utcnow()
     else:
@@ -417,7 +460,7 @@ async def fetch_results_from_vapi(
             interview_id=interview.id,
             vapi_call_id=call_id,
             transcript=transcript,
-            summary=evaluation_data.get("summary", ""),
+            summary=summary,
             evaluation=evaluation_data,
             call_duration=call_details.get("duration", 0),
             completed_at=datetime.utcnow()

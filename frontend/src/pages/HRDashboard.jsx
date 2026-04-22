@@ -621,7 +621,7 @@ function ViewResultButton({ result }) {
                             <h3 style={{ marginBottom: 'var(--spacing-md)', fontSize: '1.125rem' }}>Evaluation</h3>
 
                             {/* Recommendation Badge */}
-                            {result.evaluation.overall_recommendation && (
+                            {(result.evaluation.overall_recommendation || result.evaluation.recommendation || result.evaluation.evaluation || result.evaluation.final_recommendation) && (
                                 <div style={{ marginBottom: 'var(--spacing-md)' }}>
                                     <span style={{
                                         display: 'inline-block',
@@ -629,14 +629,28 @@ function ViewResultButton({ result }) {
                                         borderRadius: 'var(--radius-md)',
                                         fontSize: '1.125rem',
                                         fontWeight: 'bold',
-                                        background: result.evaluation.overall_recommendation === 'No Hire'
+                                        background: (
+                                            result.evaluation.overall_recommendation === 'No Hire' || 
+                                            result.evaluation.recommendation === 'Do Not Recommend' ||
+                                            result.evaluation.evaluation === 'Do Not Recommend' ||
+                                            result.evaluation.final_recommendation === 'Do Not Recommend'
+                                        )
                                             ? 'var(--color-error)'
-                                            : result.evaluation.overall_recommendation === 'Strong Hire'
+                                            : (
+                                                result.evaluation.overall_recommendation?.includes('Recommend') || 
+                                                result.evaluation.recommendation?.includes('Recommend') ||
+                                                result.evaluation.evaluation?.includes('Recommend') ||
+                                                result.evaluation.final_recommendation?.includes('Recommend') ||
+                                                result.evaluation.overall_recommendation?.includes('Hire')
+                                            )
                                                 ? 'var(--color-success)'
                                                 : 'var(--color-warning)',
                                         color: 'white'
                                     }}>
-                                        {result.evaluation.overall_recommendation}
+                                        {result.evaluation.overall_recommendation || 
+                                         result.evaluation.recommendation || 
+                                         result.evaluation.evaluation || 
+                                         result.evaluation.final_recommendation}
                                     </span>
                                 </div>
                             )}
@@ -650,25 +664,32 @@ function ViewResultButton({ result }) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {result.evaluation.overall_score !== undefined && (
+                                    {/* Handle various overall score keys */}
+                                    {(result.evaluation.overall_score !== undefined || result.evaluation.score !== undefined) && (
                                         <tr style={{ background: 'var(--color-surface-elevated)', fontWeight: 'bold' }}>
                                             <td>Overall Score</td>
                                             <td style={{ textAlign: 'center', fontSize: '1.25rem', color: 'var(--color-primary)' }}>
-                                                {result.evaluation.overall_score}/10
+                                                {result.evaluation.overall_score || result.evaluation.score}/10
                                             </td>
                                         </tr>
                                     )}
                                     {/* Scholarship Evaluation Areas */}
                                     {Object.entries({
                                         academic_background: "Academic Background",
+                                        academic: "Academic Background",
                                         motivation: "Motivation for Scholarship",
                                         study_goals: "Clarity of Study Goals",
+                                        goals: "Clarity of Study Goals",
                                         communication: "Communication Skills",
                                         leadership: "Leadership Potential",
                                         social_impact: "Community / Social Impact",
+                                        impact: "Community / Social Impact",
                                         career_vision: "Career Vision",
+                                        vision: "Career Vision",
                                         maturity: "Maturity & Authenticity",
+                                        authenticity: "Maturity & Authenticity",
                                         return_commitment: "Commitment to Return Home",
+                                        returning: "Commitment to Return Home",
                                         contribution_plan: "Contribution Plan"
                                     }).map(([key, label]) => (
                                         result.evaluation[key] !== undefined && (

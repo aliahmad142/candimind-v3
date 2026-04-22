@@ -137,7 +137,7 @@ async def handle_end_of_call(payload: dict, db: Session):
     if structured_outputs:
         # Get the first structured output (there should only be one for Interview_Evaluation)
         for output_id, output_data in structured_outputs.items():
-            if output_data.get("name") in ["Interview_Evaluation", "Backend_Interview_Evaluation"]:
+            if output_data.get("name") in ["Interview_Evaluation", "Backend_Interview_Evaluation", "Scholarship_Evaluation"]:
                 evaluation_data = output_data.get("result")
                 print(f"✅ Found {output_data.get('name')} structured output!")
                 print(f"   - Overall Score: {evaluation_data.get('overall_score')}")
@@ -254,7 +254,7 @@ async def handle_end_of_call(payload: dict, db: Session):
                     # Extract evaluation from structured outputs
                     for output_id, output_data in structured_outputs.items():
                         name = output_data.get("name")
-                        if name in ["Interview_Evaluation", "Backend_Interview_Evaluation"]:
+                        if name in ["Interview_Evaluation", "Backend_Interview_Evaluation", "Scholarship_Evaluation"]:
                             new_evaluation_data = output_data.get("result")
                             
                             if new_evaluation_data:

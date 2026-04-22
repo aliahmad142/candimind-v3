@@ -1,5 +1,4 @@
 import httpx
-from typing import Literal
 from config import get_settings
 
 settings = get_settings()
@@ -88,25 +87,17 @@ class VAPIService:
                         }
                     ]
                 },
-                "fillerWordsEnabled": True,
-                "backchannelingEnabled": True,
                 "variableValues": {
                     "candidateName": candidate_name,
                     "scholarshipProgram": role
-                }
+                },
+                "silenceTimeoutSeconds": 60,
+                "maxDurationSeconds": 1800,  # 30 minutes
             }
         }
     
     async def get_call_details(self, call_id: str) -> dict:
-        """
-        Fetch call details from VAPI API including structured outputs
-        
-        Args:
-            call_id: The VAPI call ID
-            
-        Returns:
-            Call details including structured outputs if available
-        """
+        """Fetch call details from VAPI API"""
         async with httpx.AsyncClient() as client:
             response = await client.get(
                 f"{self.BASE_URL}/call/{call_id}",
@@ -119,6 +110,47 @@ class VAPIService:
             else:
                 print(f"❌ Failed to fetch call details: {response.status_code}")
                 return {}
+
+    async def find_calls_by_interview(self, interview_unique_id: str, candidate_name: str = None, limit: int = 50) -> list:
+        """
+        Search for recent calls matching an interview ID or candidate name
+        """
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self.BASE_URL}/call?limit={limit}",
+                headers=self.headers,
+                timeout=30.0
+            )
+            
+            if response.status_code != 200:
+                return []
+                
+            calls = response.json()
+            matching_calls = []
+            
+            for call in calls:
+                # 1. Check metadata (most reliable)
+                overrides = call.get("assistantOverrides", {}) or {}
+                metadata = overrides.get("metadata", {}) or call.get("metadata", {}) or {}
+                
+                if metadata.get("interviewId") == interview_unique_id:
+                    matching_calls.append(call)
+                    continue
+                
+                # 2. Check variableValues (fallback if individual call is fetched, 
+                # but might be missing in list response)
+                variables = call.get("variableValues", {}) or {}
+                if candidate_name and variables.get("candidateName") == candidate_name:
+                    matching_calls.append(call)
+                    continue
+                
+                # 3. Check customer name
+                customer = call.get("customer", {}) or {}
+                if candidate_name and customer.get("name") == candidate_name:
+                    matching_calls.append(call)
+                    continue
+                    
+            return matching_calls
 
 
 # Singleton instance

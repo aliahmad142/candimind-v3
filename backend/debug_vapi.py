@@ -23,11 +23,12 @@ async def main():
             cid = call.get("id")
             status = call.get("status")
             metadata = call.get("metadata", {}) or {}
-            customer = call.get("customer", {}) or {}
-            name = customer.get("name", "N/A")
+            variables = call.get("variableValues", {}) or {}
+            
+            name = variables.get("candidateName") or "N/A"
             interview_id = metadata.get("interviewId", "NONE")
             
-            print(f"[{i}] {cid} | {status} | Name: {name} | Metadata: {interview_id}")
+            print(f"[{i}] {cid} | {status} | Candidate: {name} | Metadata: {interview_id}")
 
 if __name__ == "__main__":
     asyncio.run(main())
