@@ -204,8 +204,8 @@ export default function HRDashboard() {
                 <div className="page-header">
                     <div className="flex-between">
                         <div>
-                            <h1 className="page-title">AI Interview Platform</h1>
-                            <p className="page-subtitle">Create and manage AI-powered technical interviews</p>
+                            <h1 className="page-title">Scholarship Selection System</h1>
+                            <p className="page-subtitle">Manage AI-powered interviews for scholarship applicants</p>
                         </div>
                         <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
                             <button
@@ -220,7 +220,7 @@ export default function HRDashboard() {
                                 onClick={() => setShowForm(!showForm)}
                             >
                                 <Plus size={20} />
-                                New Interview
+                                New Applicant Interview
                             </button>
                         </div>
                     </div>
@@ -299,7 +299,7 @@ export default function HRDashboard() {
                                 <input
                                     type="text"
                                     className="form-input"
-                                    placeholder="John Doe"
+                                    placeholder="Applicant Name"
                                     value={formData.candidateName}
                                     onChange={(e) => setFormData({ ...formData, candidateName: e.target.value })}
                                     required
@@ -319,15 +319,28 @@ export default function HRDashboard() {
                             </div>
 
                             <div className="form-group">
-                                <label className="form-label">Role</label>
+                                <label className="form-label">Scholarship Program</label>
                                 <select
                                     className="form-select"
                                     value={formData.role}
                                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                                     required
                                 >
-                                    <option value="frontend">Frontend (React Native)</option>
-                                    <option value="backend">Backend (TypeScript)</option>
+                                    <option value="">Select a Program</option>
+                                    <optgroup label="Fulbright Programs">
+                                        <option value="Fulbright Masters">Fulbright Masters</option>
+                                        <option value="Fulbright PhD">Fulbright PhD</option>
+                                        <option value="Fulbright Foreign Language Teaching Assistant">Fulbright FLTA</option>
+                                        <option value="Fulbright Malaysian Scholar Program">Fulbright Malaysian Scholar</option>
+                                        <option value="Fulbright Specialist Program">Fulbright Specialist</option>
+                                    </optgroup>
+                                    <optgroup label="Exchange & Others">
+                                        <option value="Global UGRAD Exchange Program">Global UGRAD</option>
+                                        <option value="Hubert Humphrey Fellowship Program">Hubert Humphrey Fellowship</option>
+                                        <option value="U.S. Exchange Program">U.S. Exchange Program</option>
+                                        <option value="Commission Fellowship">Commission Fellowship</option>
+                                        <option value="Alumni Leadership">Alumni Leadership</option>
+                                    </optgroup>
                                 </select>
                             </div>
 
@@ -357,9 +370,10 @@ export default function HRDashboard() {
                             value={filters.role}
                             onChange={(e) => setFilters({ ...filters, role: e.target.value })}
                         >
-                            <option value="">All Roles</option>
-                            <option value="frontend">Frontend</option>
-                            <option value="backend">Backend</option>
+                            <option value="">All Programs</option>
+                            <option value="Fulbright Masters">Fulbright Masters</option>
+                            <option value="Fulbright PhD">Fulbright PhD</option>
+                            <option value="Global UGRAD">Global UGRAD</option>
                         </select>
                         <select
                             className="form-select"
@@ -385,9 +399,9 @@ export default function HRDashboard() {
                         <table className="table">
                             <thead>
                                 <tr>
-                                    <th>Candidate</th>
+                                    <th>Applicant</th>
                                     <th>Email</th>
-                                    <th>Role</th>
+                                    <th>Program</th>
                                     <th>Status</th>
                                     <th>Created</th>
                                     <th>Actions</th>
@@ -413,7 +427,7 @@ export default function HRDashboard() {
                                             </td>
                                             <td style={{ color: 'var(--color-text-muted)' }}>{interview.candidate_email}</td>
                                             <td>
-                                                <span className={`badge badge-${interview.role}`}>
+                                                <span className={`badge badge-scholarship`} style={{ background: 'var(--color-primary-dark)' }}>
                                                     {interview.role}
                                                 </span>
                                             </td>
@@ -644,70 +658,28 @@ function ViewResultButton({ result }) {
                                             </td>
                                         </tr>
                                     )}
-                                    {result.evaluation.communication_clarity !== undefined && (
-                                        <tr>
-                                            <td>Communication Clarity</td>
-                                            <td style={{ textAlign: 'center', fontSize: '1.125rem' }}>
-                                                {result.evaluation.communication_clarity}/10
-                                            </td>
-                                        </tr>
-                                    )}
-                                    {result.evaluation.culture_fit_ownership !== undefined && (
-                                        <tr>
-                                            <td>Culture Fit & Ownership</td>
-                                            <td style={{ textAlign: 'center', fontSize: '1.125rem' }}>
-                                                {result.evaluation.culture_fit_ownership}/10
-                                            </td>
-                                        </tr>
-                                    )}
-                                    {result.evaluation.react_native_technical_depth !== undefined && (
-                                        <tr>
-                                            <td>React Native Technical Depth</td>
-                                            <td style={{ textAlign: 'center', fontSize: '1.125rem' }}>
-                                                {result.evaluation.react_native_technical_depth}/10
-                                            </td>
-                                        </tr>
-                                    )}
-                                    {result.evaluation.mobile_engineering_experience !== undefined && (
-                                        <tr>
-                                            <td>Mobile Engineering Experience</td>
-                                            <td style={{ textAlign: 'center', fontSize: '1.125rem' }}>
-                                                {result.evaluation.mobile_engineering_experience}/10
-                                            </td>
-                                        </tr>
-                                    )}
-                                    {result.evaluation.backend_technical_depth !== undefined && (
-                                        <tr>
-                                            <td>Backend Technical Depth</td>
-                                            <td style={{ textAlign: 'center', fontSize: '1.125rem' }}>
-                                                {result.evaluation.backend_technical_depth}/10
-                                            </td>
-                                        </tr>
-                                    )}
-                                    {result.evaluation.system_design_ability !== undefined && (
-                                        <tr>
-                                            <td>System Design Ability</td>
-                                            <td style={{ textAlign: 'center', fontSize: '1.125rem' }}>
-                                                {result.evaluation.system_design_ability}/10
-                                            </td>
-                                        </tr>
-                                    )}
-                                    {result.evaluation.backend_technical_depth !== undefined && (
-                                        <tr>
-                                            <td>Backend Technical Depth</td>
-                                            <td style={{ textAlign: 'center', fontSize: '1.125rem' }}>
-                                                {result.evaluation.backend_technical_depth}/10
-                                            </td>
-                                        </tr>
-                                    )}
-                                    {result.evaluation.system_design_ability !== undefined && (
-                                        <tr>
-                                            <td>System Design Ability</td>
-                                            <td style={{ textAlign: 'center', fontSize: '1.125rem' }}>
-                                                {result.evaluation.system_design_ability}/10
-                                            </td>
-                                        </tr>
-                                    )}
+                                    {/* Scholarship Evaluation Areas */}
+                                    {Object.entries({
+                                        academic_background: "Academic Background",
+                                        motivation: "Motivation for Scholarship",
+                                        study_goals: "Clarity of Study Goals",
+                                        communication: "Communication Skills",
+                                        leadership: "Leadership Potential",
+                                        social_impact: "Community / Social Impact",
+                                        career_vision: "Career Vision",
+                                        maturity: "Maturity & Authenticity",
+                                        return_commitment: "Commitment to Return Home",
+                                        contribution_plan: "Contribution Plan"
+                                    }).map(([key, label]) => (
+                                        result.evaluation[key] !== undefined && (
+                                            <tr key={key}>
+                                                <td>{label}</td>
+                                                <td style={{ textAlign: 'center', fontSize: '1.125rem' }}>
+                                                    {result.evaluation[key]}/10
+                                                </td>
+                                            </tr>
+                                        )
+                                    ))}
                                 </tbody>
                             </table>
 

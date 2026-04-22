@@ -9,8 +9,7 @@ class Settings(BaseSettings):
     # VAPI Configuration
     vapi_api_key: str
     vapi_phone_number_id: str | None = None
-    vapi_assistant_frontend_id: str | None = None
-    vapi_assistant_backend_id: str | None = None
+    vapi_scholarship_assistant_id: str | None = None
     
     # Database
     database_url: str = "sqlite:///./interviews.db"

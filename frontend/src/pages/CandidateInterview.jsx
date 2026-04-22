@@ -241,8 +241,8 @@ export default function CandidateInterview() {
                                 <p style={{ color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-sm)' }}>
                                     You're about to begin your AI-powered interview for the
                                 </p>
-                                <span className={`badge badge-${interview.interview.role}`} style={{ fontSize: '1rem', padding: '0.5rem 1rem' }}>
-                                    {interview.interview.role === 'frontend' ? 'Frontend React Native Developer' : 'Backend TypeScript Developer'}
+                                <span className="badge badge-scholarship" style={{ fontSize: '1rem', padding: '0.5rem 1rem', background: 'var(--color-primary-dark)' }}>
+                                    {interview.interview.role}
                                 </span>
                                 <p style={{ color: 'var(--color-text-muted)', marginTop: 'var(--spacing-lg)' }}>
                                     This is a voice-based interview. Please ensure you're in a quiet environment
@@ -307,8 +307,8 @@ export default function CandidateInterview() {
                                 </div>
 
                                 <h2 style={{ marginBottom: 'var(--spacing-md)' }}>Interview in Progress</h2>
-                                <span className={`badge badge-${interview.interview.role}`} style={{ fontSize: '1rem' }}>
-                                    {interview.interview.role === 'frontend' ? 'Frontend React Native' : 'Backend TypeScript'}
+                                <span className="badge badge-scholarship" style={{ fontSize: '1rem', background: 'var(--color-primary-dark)' }}>
+                                    {interview.interview.role}
                                 </span>
                             </div>
 

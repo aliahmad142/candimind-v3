@@ -11,7 +11,7 @@ class Interview(Base):
     id = Column(Integer, primary_key=True, index=True)
     candidate_name = Column(String(255), nullable=False)
     candidate_email = Column(String(255), nullable=False)
-    role = Column(String(50), nullable=False)  # 'frontend' or 'backend'
+    role = Column(String(255), nullable=False)  # Scholarship Program Name (e.g., 'Fulbright Masters')
     interview_link = Column(String(500), nullable=False, unique=True)
     unique_id = Column(String(100), nullable=False, unique=True, index=True)
     password_hash = Column(String(255), nullable=True)  # Hashed password for interview access

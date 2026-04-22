@@ -20,7 +20,7 @@ settings = get_settings()
 class CreateInterviewRequest(BaseModel):
     candidate_name: str
     candidate_email: EmailStr
-    role: Literal["frontend", "backend"]
+    role: str
 
 
 class InterviewResponse(BaseModel):
@@ -64,8 +64,7 @@ async def create_interview(
     # Hash the password
     password_hash = bcrypt.hashpw(access_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
-    # Get assistant ID for the role
-    assistant_id = vapi_service.get_assistant_id_for_role(request.role)
+    assistant_id = settings.vapi_scholarship_assistant_id
     
     # Create web call link
     interview_link = await vapi_service.create_web_call_link(
@@ -387,7 +386,7 @@ async def fetch_results_from_vapi(
     evaluation_data = None
     for output_id, output_data in structured_outputs.items():
         name = output_data.get("name")
-        if name in ["Interview_Evaluation", "Backend_Interview_Evaluation"]:
+        if name in ["Interview_Evaluation", "Backend_Interview_Evaluation", "Scholarship_Evaluation"]:
             evaluation_data = output_data.get("result")
             break
     

@@ -42,58 +42,57 @@ class VAPIService:
         
         return web_url
     
-    def get_assistant_id_for_role(self, role: Literal["frontend", "backend"]) -> str:
-        """Get the appropriate VAPI assistant ID based on role"""
-        if role == "frontend":
-            return settings.vapi_assistant_frontend_id
-        elif role == "backend":
-            return settings.vapi_assistant_backend_id
-        else:
-            raise ValueError(f"Invalid role: {role}")
-    
-    async def get_assistant_config(self, role: Literal["frontend", "backend"]) -> dict:
-        """
-        Get assistant configuration for embedding in frontend
-        This returns the config needed for VAPI Web SDK
-        """
-        assistant_id = self.get_assistant_id_for_role(role)
-        
-        # Return configuration for VAPI Web SDK
-        return {
-            "assistantId": assistant_id,
-            "apiKey": self.api_key,  # Public key if using client-side, or handle server-side
-        }
-    
+    def _get_prompt(self, filename: str) -> str:
+        """Helper to read prompt from file"""
+        import os
+        prompt_path = os.path.join(os.path.dirname(__file__), "..", "..", "vapi-prompts", filename)
+        try:
+            with open(prompt_path, "r", encoding="utf-8") as f:
+                return f.read()
+        except Exception as e:
+            print(f"❌ Error reading prompt file {filename}: {e}")
+            return ""
+
     async def create_assistant_overrides(
         self,
-        role: Literal["frontend", "backend"],
+        role: str,  # Now a scholarship program name
         candidate_name: str
     ) -> dict:
         """
-        Create assistant configuration overrides for personalization
-        This can customize the assistant behavior per candidate
+        Create assistant configuration overrides for scholarship interviews
         """
-        base_assistant_id = self.get_assistant_id_for_role(role)
+        base_assistant_id = settings.vapi_scholarship_assistant_id
+
+        # Use the master scholarship prompt
+        system_prompt = self._get_prompt("scholarship-academic-prompt.md")
         
-        # You can override the first message to personalize it
-        role_title = "Frontend React Native Developer" if role == "frontend" else "Backend Developer (TypeScript)"
-        
-        first_message = (
-            f"Hello {candidate_name}, and welcome. I'm your interviewer for the "
-            f"Senior Specialist – {role_title} role. This interview will focus on your "
-            f"{'mobile development experience with React Native' if role == 'frontend' else 'backend engineering experience with TypeScript and Node.js'}, "
-            f"how you build production-ready {'mobile applications' if role == 'frontend' else 'APIs and systems'}, "
-            f"and how you handle real-world challenges. This session may be recorded for review. "
-            f"If you're in a quiet place and ready to begin, please say 'yes.'"
-        )
+        # Simple template replacement
+        system_prompt = system_prompt.replace("{{candidateName}}", candidate_name)
+        system_prompt = system_prompt.replace("{{role}}", role)
+
+        # Soft and friendly first message
+        first_message = f"Hi {candidate_name}! It's great to meet you. I'm part of the Selection Committee for the {role} program. How are you doing today?"
         
         return {
             "assistantId": base_assistant_id,
             "assistantOverrides": {
                 "firstMessage": first_message,
                 "serverUrl": f"{settings.backend_url}/api/webhooks/vapi",
+                "model": {
+                    "provider": "openai",
+                    "model": "gpt-4o",
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": system_prompt
+                        }
+                    ]
+                },
+                "fillerWordsEnabled": True,
+                "backchannelingEnabled": True,
                 "variableValues": {
-                    "candidateName": candidate_name
+                    "candidateName": candidate_name,
+                    "scholarshipProgram": role
                 }
             }
         }
