@@ -1,0 +1,52 @@
+# Root .gitignore for CandiMind
+
+# Media & Large Uploads (Do NOT push to GitHub)
+backend/uploads/
+uploads/
+*.webm
+*.mp4
+*.wav
+*.mp3
+interview_audio.mp3
+
+# Temporary debug & dump files
+full_call.json
+report.json
+structured_output.json
+transcript.txt
+backend/debug_*.txt
+backend/webhook_debug.log
+backend/db_status.txt
+backend/interviews_check.json
+backend/structured_output_list.txt
+backend/temp_assistant.json
+backend/update_error.txt
+backend/vapi_config_output.txt
+
+# Secrets & Environment variables (CRITICAL)
+.env
+backend/.env
+frontend/.env
+*.env.local
+*.env.production
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+backend/interviews.db
+
+# Dependencies & Environments
+node_modules/
+backend/venv/
+venv/
+.venv/
+frontend/dist/
+__pycache__/
+*.pyc
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

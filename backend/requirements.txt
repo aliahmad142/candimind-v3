@@ -11,3 +11,4 @@ alembic
 email-validator
 psycopg2-binary
 bcrypt
+imageio-ffmpeg

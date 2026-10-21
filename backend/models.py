@@ -11,7 +11,8 @@ class Interview(Base):
     id = Column(Integer, primary_key=True, index=True)
     candidate_name = Column(String(255), nullable=False)
     candidate_email = Column(String(255), nullable=False)
-    role = Column(String(255), nullable=False)  # Scholarship Program Name (e.g., 'Fulbright Masters')
+    role = Column(String(255), nullable=False)  # Program Name or Job Role
+    category = Column(String(50), default="scholarship")  # scholarship, hr
     interview_link = Column(String(500), nullable=False, unique=True)
     unique_id = Column(String(100), nullable=False, unique=True, index=True)
     password_hash = Column(String(255), nullable=True)  # Hashed password for interview access
@@ -41,6 +42,17 @@ class InterviewResult(Base):
     transcript = Column(Text, nullable=True)
     summary = Column(Text, nullable=True)
     evaluation = Column(JSON, nullable=True)  # Structured evaluation from AI
+    vapi_audio_url = Column(String(1000), nullable=True)  # Audio recording URL from VAPI (stereo/mono)
+    
+    # Video Recording, Audio & Synchronized Media
+    recording_video_path = Column(String(500), nullable=True)  # Original webcam video
+    recording_video_filename = Column(String(255), nullable=True)
+    recording_uploaded_at = Column(DateTime, nullable=True)
+    merged_video_path = Column(String(500), nullable=True)     # Final synchronized video with audio
+    audio_offset_ms = Column(Float, nullable=True)              # Sync offset in ms (vapi_started - video_started)
+    video_started_at_ms = Column(Float, nullable=True)
+    vapi_started_at_ms = Column(Float, nullable=True)
+    integrity_summary = Column(JSON, nullable=True)  # Stores tab switches, fullscreen exits, sync timestamps, etc.
     
     # Metadata
     completed_at = Column(DateTime, default=datetime.utcnow)

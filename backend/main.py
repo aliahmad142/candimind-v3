@@ -1,11 +1,18 @@
+import os
 from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from database import init_db, get_db
 from routes import interviews, webhooks
 from config import get_settings
 
 settings = get_settings()
+
+# Create uploads directory
+UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
+INTERVIEW_UPLOADS_DIR = os.path.join(UPLOAD_DIR, "interviews")
+os.makedirs(INTERVIEW_UPLOADS_DIR, exist_ok=True)
 
 # Create FastAPI app
 app = FastAPI(
@@ -28,6 +35,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Serve uploaded video files
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
 # Include routers
 app.include_router(interviews.router)
 app.include_router(webhooks.router)
@@ -39,6 +49,7 @@ async def startup_event():
     print("🚀 Starting AI Interview Platform API...")
     init_db()
     print("✅ Database initialized")
+    print(f"📁 Video Upload Directory: {INTERVIEW_UPLOADS_DIR}")
     print(f"📡 Backend URL: {settings.backend_url}")
     print(f"🌐 Frontend URL: {settings.frontend_url}")
 

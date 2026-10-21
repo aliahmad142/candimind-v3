@@ -5,6 +5,7 @@ import json
 
 from database import get_db
 from models import Interview, InterviewResult
+from services.vapi_service import extract_vapi_audio_url, download_and_save_vapi_audio, merge_video_and_audio
 
 router = APIRouter(prefix="/api/webhooks", tags=["webhooks"])
 
@@ -115,14 +116,27 @@ async def handle_end_of_call(payload: dict, db: Session):
     messages = message_data.get("call", {}).get("messages") or message_data.get("messages", [])
     analysis = message_data.get("call", {}).get("analysis") or message_data.get("analysis", {})
     
-    # Build transcript from messages
+    # Build clean dialogue transcript from messages (exclude internal system prompts and tool messages)
     transcript_parts = []
     for msg in messages:
-        role = msg.get("role", "unknown")
-        content = msg.get("content") or msg.get("message", "")
-        transcript_parts.append(f"{role.upper()}: {content}")
+        role = (msg.get("role") or "").lower()
+        # Strictly skip system prompt, system instructions, and tool messages
+        if role in ["system", "tool", "function"]:
+            continue
+        content = (msg.get("content") or msg.get("message") or "").strip()
+        if not content:
+            continue
+        speaker = "AI" if role in ["bot", "assistant"] else "CANDIDATE" if role in ["user", "human"] else role.upper()
+        transcript_parts.append(f"{speaker}: {content}")
     
     transcript = "\n\n".join(transcript_parts)
+    
+    # Fallback to call transcript if messages didn't yield dialogue
+    if not transcript:
+        raw_vapi_transcript = message_data.get("call", {}).get("transcript") or message_data.get("transcript", "")
+        if raw_vapi_transcript:
+            import re
+            transcript = re.sub(r"^SYSTEM:[\s\S]*?(?=(?:BOT|ASSISTANT|AI|USER|CANDIDATE):)", "", raw_vapi_transcript, flags=re.IGNORECASE).strip()
     
     # Extract summary and structured data from VAPI's actual webhook structure
     summary = analysis.get("summary", "")
@@ -135,16 +149,28 @@ async def handle_end_of_call(payload: dict, db: Session):
     print(f"📊 Structured Outputs found: {len(structured_outputs)} items")
     
     if structured_outputs:
-        # Get the first structured output (there should only be one for Interview_Evaluation)
+        # Get the structured output matching the interview type
         for output_id, output_data in structured_outputs.items():
-            if output_data.get("name") in ["Interview_Evaluation", "Backend_Interview_Evaluation", "Scholarship_Evaluation"]:
+            out_name = output_data.get("name")
+            if out_name in [
+                "Interview_Evaluation", 
+                "Backend_Interview_Evaluation", 
+                "Scholarship_Evaluation",
+                "HR_Screening_Evaluation"
+            ]:
                 evaluation_data = output_data.get("result")
-                print(f"✅ Found {output_data.get('name')} structured output!")
-                print(f"   - Overall Score: {evaluation_data.get('overall_score')}")
-                print(f"   - Recommendation: {evaluation_data.get('overall_recommendation')}")
-                # Also use the summary from structured output if available
-                if evaluation_data and evaluation_data.get("summary"):
-                    summary = evaluation_data.get("summary")
+                print(f"✅ Found {out_name} structured output!")
+                if evaluation_data:
+                    # Support both HR summary (interview_summary) and academic summary (summary)
+                    if evaluation_data.get("interview_summary"):
+                        summary = evaluation_data.get("interview_summary")
+                    elif evaluation_data.get("summary"):
+                        summary = evaluation_data.get("summary")
+                    
+                    if "overall_score" in evaluation_data:
+                        print(f"   - Overall Score: {evaluation_data.get('overall_score')}")
+                    if "review_status" in evaluation_data:
+                        print(f"   - Review Status: {evaluation_data.get('review_status')}")
                 break
     
     # Fallback to old location if not found in structuredOutputs
@@ -181,6 +207,13 @@ async def handle_end_of_call(payload: dict, db: Session):
         print(f"⚠️  No interview found for call {call_id}")
         return
     
+    # Download VAPI stereo audio recording server-side and save locally
+    vapi_audio_path = await download_and_save_vapi_audio(call_id, interview.id, payload)
+    if not vapi_audio_path and message_data:
+        vapi_audio_path = await download_and_save_vapi_audio(call_id, interview.id, message_data)
+        
+    print(f"🎵 VAPI Local Audio Recording Path: {vapi_audio_path}")
+
     # Check if result already exists
     existing_result = db.query(InterviewResult).filter(
         InterviewResult.interview_id == interview.id
@@ -193,6 +226,8 @@ async def handle_end_of_call(payload: dict, db: Session):
         existing_result.summary = summary
         existing_result.evaluation = evaluation_data
         existing_result.call_duration = duration
+        if vapi_audio_path:
+            existing_result.vapi_audio_url = vapi_audio_path
         existing_result.raw_webhook_data = message_data  # Save the actual message data
         existing_result.completed_at = datetime.utcnow()
     else:
@@ -204,6 +239,7 @@ async def handle_end_of_call(payload: dict, db: Session):
             summary=summary,
             evaluation=evaluation_data,
             call_duration=duration,
+            vapi_audio_url=vapi_audio_path,
             raw_webhook_data=message_data,  # Save the actual message data
             completed_at=datetime.utcnow()
         )
@@ -215,6 +251,9 @@ async def handle_end_of_call(payload: dict, db: Session):
     
     print(f"📝 Committing to database...")
     db.commit()
+    
+    # Automatically merge webcam video + VAPI audio if both are ready
+    merge_video_and_audio(interview.id, db)
     
     print(f"✅ Interview {interview.id} ({interview.candidate_name}) completed and saved!")
     print(f"   - Status: {interview.status}")
@@ -245,6 +284,15 @@ async def handle_end_of_call(payload: dict, db: Session):
                 print(f"   Fetching call details from VAPI API...")
                 call_details = await vapi_service.get_call_details(call_id)
                 
+                # Check for audio recording URL in polled call details
+                polled_audio_url = extract_vapi_audio_url(call_details)
+                if polled_audio_url:
+                    res = db.query(InterviewResult).filter(InterviewResult.interview_id == interview.id).first()
+                    if res and not res.vapi_audio_url:
+                        res.vapi_audio_url = polled_audio_url
+                        db.commit()
+                        print(f"   🎵 Updated vapi_audio_url from polling: {polled_audio_url}")
+                
                 # Check if structured outputs are available
                 structured_outputs = call_details.get("artifact", {}).get("structuredOutputs", {})
                 
@@ -254,7 +302,12 @@ async def handle_end_of_call(payload: dict, db: Session):
                     # Extract evaluation from structured outputs
                     for output_id, output_data in structured_outputs.items():
                         name = output_data.get("name")
-                        if name in ["Interview_Evaluation", "Backend_Interview_Evaluation", "Scholarship_Evaluation"]:
+                        if name in [
+                            "Interview_Evaluation", 
+                            "Backend_Interview_Evaluation", 
+                            "Scholarship_Evaluation",
+                            "HR_Screening_Evaluation"
+                        ]:
                             new_evaluation_data = output_data.get("result")
                             
                             if new_evaluation_data:
@@ -265,13 +318,17 @@ async def handle_end_of_call(payload: dict, db: Session):
                                 
                                 if result:
                                     result.evaluation = new_evaluation_data
-                                    if new_evaluation_data.get("summary"):
+                                    if new_evaluation_data.get("interview_summary"):
+                                        result.summary = new_evaluation_data.get("interview_summary")
+                                    elif new_evaluation_data.get("summary"):
                                         result.summary = new_evaluation_data.get("summary")
                                     db.commit()
                                     
-                                    print(f"   ✅ Evaluation data updated!")
-                                    print(f"      - Overall Score: {new_evaluation_data.get('overall_score')}")
-                                    print(f"      - Recommendation: {new_evaluation_data.get('overall_recommendation')}")
+                                    print(f"   ✅ Evaluation data updated for {name}!")
+                                    if "overall_score" in new_evaluation_data:
+                                        print(f"      - Overall Score: {new_evaluation_data.get('overall_score')}")
+                                    if "review_status" in new_evaluation_data:
+                                        print(f"      - Review Status: {new_evaluation_data.get('review_status')}")
                                     break
                     break  # Exit retry loop
                 else:

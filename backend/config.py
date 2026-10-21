@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     vapi_api_key: str
     vapi_phone_number_id: str | None = None
     vapi_scholarship_assistant_id: str | None = None
+    vapi_hr_assistant_id: str | None = None
+    vapi_hr_structured_output_id: str | None = None
     
     # Database
     database_url: str = "sqlite:///./interviews.db"

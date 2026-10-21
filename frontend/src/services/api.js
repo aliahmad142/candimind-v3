@@ -12,11 +12,12 @@ const api = axios.create({
 // Interview API calls
 export const interviewAPI = {
     // Create a new interview link
-    createInterview: async (candidateName, candidateEmail, role) => {
+    createInterview: async (candidateName, candidateEmail, role, category = 'scholarship') => {
         const response = await api.post('/api/interviews/create', {
             candidate_name: candidateName,
             candidate_email: candidateEmail,
             role: role,
+            category: category,
         });
         return response.data;
     },
@@ -63,6 +64,24 @@ export const interviewAPI = {
     fetchResults: async (interviewId) => {
         const response = await api.post(`/api/interviews/${interviewId}/fetch-results`);
         return response.data;
+    },
+
+    // Upload video recording and integrity data
+    uploadRecording: async (interviewId, blob, integrityData) => {
+        const formData = new FormData();
+        formData.append('file', blob, `interview_${interviewId}.webm`);
+        if (integrityData) {
+            formData.append('integrity_data', JSON.stringify(integrityData));
+        }
+        const response = await fetch(`${API_BASE_URL}/api/interviews/${interviewId}/recording`, {
+            method: 'POST',
+            body: formData,
+        });
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Upload failed (${response.status}): ${errText}`);
+        }
+        return await response.json();
     },
 };
 

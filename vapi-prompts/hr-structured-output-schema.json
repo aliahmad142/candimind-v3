@@ -1,0 +1,66 @@
+{
+  "name": "HR_Screening_Evaluation",
+  "id": "2fc2e580-c34a-4e05-a56e-6ce7630c0bb5",
+  "assistantId": "6389886e-f01e-4d5c-8583-a9bd75fe1a10",
+  "description": "Extract a structured, evidence-based evaluation from completed General HR Screening interviews.",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "communication": {
+        "type": "number",
+        "description": "Score (1-10) for candidate's ability to explain ideas clearly and communicate coherently."
+      },
+      "background_experience": {
+        "type": "number",
+        "description": "Score (1-10) for how clearly the candidate explains educational background and experiences."
+      },
+      "problem_solving": {
+        "type": "number",
+        "description": "Score (1-10) for demonstrated problem identification, reasoning, decisions, and reflection."
+      },
+      "teamwork": {
+        "type": "number",
+        "description": "Score (1-10) for demonstrated collaboration, shared responsibility, and handling team situations."
+      },
+      "self_awareness": {
+        "type": "number",
+        "description": "Score (1-10) for candidate's ability to recognize strengths, development areas, and receive feedback."
+      },
+      "adaptability": {
+        "type": "number",
+        "description": "Score (1-10) for demonstrated learning, flexibility, and response to changing circumstances."
+      },
+      "career_motivation": {
+        "type": "number",
+        "description": "Score (1-10) for clarity, thoughtfulness, and realism of professional interests and goals."
+      },
+      "interview_summary": {
+        "type": "string",
+        "description": "Summarize the candidate's HR interview in 3-5 sentences."
+      },
+      "key_strengths": {
+        "type": "string",
+        "description": "Describe up to three strengths supported by the interview answers."
+      },
+      "areas_for_improvement": {
+        "type": "string",
+        "description": "Describe areas for development supported by evidence."
+      },
+      "evaluation_reasoning": {
+        "type": "string",
+        "description": "Explain the competency scores using specific candidate responses."
+      },
+      "review_status": {
+        "type": "string",
+        "description": "Return 'Ready for Human Review' or 'Insufficient Evidence'"
+      }
+    },
+    "required": [
+      "interview_summary",
+      "key_strengths",
+      "areas_for_improvement",
+      "evaluation_reasoning",
+      "review_status"
+    ]
+  }
+}

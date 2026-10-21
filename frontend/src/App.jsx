@@ -9,7 +9,11 @@ function App() {
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<HRDashboard />} />
+                <Route path="/admin" element={<HRDashboard />} />
                 <Route path="/interview/:uniqueId" element={<CandidateInterview />} />
+                <Route path="/interview" element={<CandidateInterview />} />
+                <Route path="/candidate" element={<CandidateInterview />} />
+                <Route path="/login" element={<CandidateInterview />} />
             </Routes>
         </BrowserRouter>
     );

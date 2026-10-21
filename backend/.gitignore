@@ -22,6 +22,20 @@ build/
 *.sqlite
 *.sqlite3
 
+# Uploads & Media (Candidate videos/audio)
+uploads/
+*.mp4
+*.webm
+*.wav
+*.mp3
+
+# Debug & Temporary Files
+*.log
+webhook_debug.log
+debug_*.txt
+*.json
+*.txt
+
 # IDE
 .vscode/
 .idea/

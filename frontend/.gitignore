@@ -27,3 +27,30 @@ dist-ssr
 .env
 .env.local
 .env.production
+
+# Media uploads (Candidate videos, audio, merged recordings)
+backend/uploads/
+uploads/
+*.webm
+*.mp4
+*.wav
+*.mp3
+
+# Environment variables & secrets (CRITICAL: Do not leak API keys)
+backend/.env
+frontend/.env
+*.env.local
+
+# Databases & local logs
+*.db
+backend/interviews.db
+*.log
+backend/webhook_debug.log
+backend/debug_*.txt
+
+# Dependencies & Virtual Environments
+backend/venv/
+venv/
+node_modules/
+frontend/dist/
+__pycache__/
